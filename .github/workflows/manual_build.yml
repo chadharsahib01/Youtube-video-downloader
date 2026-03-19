@@ -1,44 +1,35 @@
-name: Manual APK Build
+name: Manual Android Build
 on:
   workflow_dispatch:
 
-# Setting this at the top level opts into Node 24 immediately 
-# and silences the deprecation warnings.
 env:
+  # Ensuring we use the 2026-standard Node runtime for actions
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      # Updated to v6 for Node 24 support
       - name: Checkout code
         uses: actions/checkout@v6
 
-      # Updated to v5 for Node 24 support
-      - name: Set up Java
+      - name: Set up JDK 17
         uses: actions/setup-java@v5
         with:
           distribution: 'zulu'
           java-version: '17'
-          cache: 'gradle' # Adding cache here speeds up future builds
+          cache: 'gradle'
 
-      # subosito/flutter-action v2.22+ handles Node 24 internally
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: 'stable'
-          cache: true
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
 
-      - name: Get dependencies
-        run: flutter pub get
+      - name: Build Debug APK
+        # This builds the universal debug APK
+        run: ./gradlew assembleDebug
 
-      - name: Build APK
-        run: flutter build apk --debug
-
-      # Updated to v7 for the latest artifact performance
       - name: Upload Artifact
         uses: actions/upload-artifact@v7
         with:
           name: ytdlnis-debug-apk
-          path: build/app/outputs/flutter-apk/app-debug.apk
+          # Path where Gradle outputs the APK
+          path: app/build/outputs/apk/debug/*.apk
